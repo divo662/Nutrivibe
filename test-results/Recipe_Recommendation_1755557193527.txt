@@ -1,0 +1,94 @@
+Test: Recipe Recommendation
+Description: Recommend healthy Nigerian recipes based on user preferences
+Expected: 5 healthy Nigerian recipes with nutrition facts and local alternatives
+Timestamp: 2025-08-18T22:46:33.527Z
+Response Time: 2405ms
+Tokens: 935 (prompt: 127, completion: 808)
+Estimated Cost: $0.000467
+
+PROMPT:
+I'm a Nigerian living in Lagos who wants to eat healthier. I love traditional food but need to watch my calories. 
+I'm looking for:
+- Low-calorie versions of popular Nigerian dishes
+- High-protein options
+- Easy to make with local ingredients
+- Suitable for weight loss
+
+Please recommend 5 recipes with:
+- Calorie count per serving
+- Protein content
+- Preparation time
+- Local ingredient alternatives
+
+RESPONSE:
+As NutriVibe, I'm excited to help you achieve your health goals while still enjoying delicious Nigerian cuisine. Here are 5 low-calorie, high-protein recipes with local ingredient alternatives, perfect for weight loss:
+
+**Recipe 1: Low-Calorie Jollof Rice with Chicken**
+
+* **Calorie count per serving:** 420 calories
+* **Protein content:** 35g
+* **Preparation time:** 30 minutes
+* **Local ingredient alternatives:**
+	+ Use brown rice instead of white rice (reduces calories and increases fiber)
+	+ Replace vegetable oil with olive oil (healthier fat option)
+	+ Add lean chicken breast (high protein and low fat)
+
+**Recipe:** Cook brown rice with tomato puree, onions, peppers, garlic, ginger, and spices. Add lean chicken breast, olive oil, and stir-fry. Serve with steamed vegetables.
+
+**Recipe 2: Grilled Fish with Vegetable Akara**
+
+* **Calorie count per serving:** 320 calories
+* **Protein content:** 30g
+* **Preparation time:** 20 minutes
+* **Local ingredient alternatives:**
+	+ Use low-fat bean paste (akara) instead of deep-fried akara
+	+ Replace vegetable oil with olive oil (healthier fat option)
+	+ Add grilled fish (high protein and low fat)
+
+**Recipe:** Grill fish with lemon, garlic, and spices. Make vegetable akara with low-fat bean paste, onions, peppers, and spices. Serve with steamed vegetables.
+
+**Recipe 3: Low-Calorie Egusi Soup with Lean Beef**
+
+* **Calorie count per serving:** 400 calories
+* **Protein content:** 30g
+* **Preparation time:** 40 minutes
+* **Local ingredient alternatives:**
+	+ Use lean beef instead of fatty beef (reduces calories and saturated fat)
+	+ Add vegetables like spinach, carrots, and green beans (increases fiber and vitamins)
+	+ Use egusi seeds (rich in fiber and protein)
+
+**Recipe:** Cook lean beef with onions, peppers, garlic, and spices. Add egusi seeds, vegetables, and low-sodium beef broth. Simmer until the egusi seeds are tender.
+
+**Recipe 4: Baked Plantain with Lean Turkey**
+
+* **Calorie count per serving:** 380 calories
+* **Protein content:** 25g
+* **Preparation time:** 25 minutes
+* **Local ingredient alternatives:**
+	+ Use ripe plantain instead of unripe plantain (reduces starch and calories)
+	+ Replace vegetable oil with olive oil (healthier fat option)
+	+ Add lean turkey breast (high protein and low fat)
+
+**Recipe:** Bake plantain with olive oil, garlic, and spices. Grill lean turkey breast with lemon, garlic, and spices. Serve together with steamed vegetables.
+
+**Recipe 5: Low-Calorie Ogbono Soup with Chicken**
+
+* **Calorie count per serving:** 440 calories
+* **Protein content:** 30g
+* **Preparation time:** 35 minutes
+* **Local ingredient alternatives:**
+	+ Use lean chicken breast instead of fatty chicken (reduces calories and saturated fat)
+	+ Add vegetables like spinach, carrots, and green beans (increases fiber and vitamins)
+	+ Use ogbono seeds (rich in fiber and protein)
+
+**Recipe:** Cook lean chicken breast with onions, peppers, garlic, and spices. Add ogbono seeds, vegetables, and low-sodium chicken broth. Simmer until the ogbono seeds are tender.
+
+**Tips for weight loss:**
+
+1. Eat regular, balanced meals to control hunger and boost metabolism.
+2. Incorporate physical activity, like walking or jogging, into your daily routine.
+3. Drink plenty of water throughout the day to stay hydrated.
+4. Limit your intake of sugary drinks and snacks.
+5. Monitor your portion sizes and calorie intake to achieve a healthy weight.
+
+Enjoy your delicious and healthy Nigerian meals!

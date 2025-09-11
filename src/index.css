@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* NutriVibe Design System - Nigerian-inspired health & nutrition platform */
+
+@layer base {
+  :root {
+    /* Brand Colors - Nigerian Green & Food-inspired */
+    --background: 42 100% 98%;
+    --foreground: 158 77% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 158 77% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 158 77% 11%;
+
+    --primary: 158 77% 40%;        /* Nigerian Green */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 158 60% 55%;   /* Lighter green for effects */
+
+    --secondary: 25 95% 53%;       /* Vibrant Orange - food inspired */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 42 38% 95%;
+    --muted-foreground: 158 20% 45%;
+
+    --accent: 45 93% 58%;          /* Golden Yellow - food warmth */
+    --accent-foreground: 158 77% 11%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 158 25% 88%;
+    --input: 158 25% 94%;
+    --ring: 158 77% 40%;
+
+    --radius: 0.75rem;
+
+    /* Custom Design Tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-warm: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--accent)));
+    --gradient-subtle: linear-gradient(180deg, hsl(42 100% 98%), hsl(42 80% 96%));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 50%, hsl(var(--accent)) 100%);
+    
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.15);
+    --shadow-warm: 0 10px 30px -10px hsl(var(--secondary) / 0.3);
+    --shadow-elegant: 0 20px 60px -10px hsl(var(--primary) / 0.2);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Dark mode overrides for NutriVibe */
+  .dark {
+    --background: 158 20% 8%;
+    --foreground: 42 100% 95%;
+    
+    --card: 158 20% 10%;
+    --card-foreground: 42 100% 95%;
+    
+    --primary: 158 60% 55%;
+    --primary-glow: 158 45% 65%;
+    
+    --secondary: 25 85% 60%;
+    --accent: 45 85% 65%;
+    
+    --muted: 158 15% 15%;
+    --muted-foreground: 158 10% 60%;
+    
+    --border: 158 20% 20%;
+    --input: 158 20% 15%;
+    
+    /* Update gradients for dark mode */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 50%, hsl(var(--accent)) 100%);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.25);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

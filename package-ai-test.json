@@ -1,0 +1,29 @@
+{
+  "name": "nutrivibe-ai-testing",
+  "version": "1.0.0",
+  "description": "AI testing suite for NutriVibe nutrition platform using Groq",
+  "main": "test-groq-ai.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-groq-ai.js",
+    "quick": "node quick-test.js",
+    "test:meal-plan": "node -e \"import('./test-groq-ai.js').then(m => m.testScenario({name: 'Meal Plan Generation', description: 'Test meal plan generation', prompt: 'Generate a 3-day meal plan for a Nigerian person wanting to lose weight', expected: 'Structured meal plan'}, 'meta-llama/llama-4-scout-17b-16e-instruct'))\"",
+    "test:recipe": "node -e \"import('./test-groq-ai.js').then(m => m.testScenario({name: 'Recipe Recommendation', description: 'Test recipe recommendations', prompt: 'Recommend 3 healthy Nigerian recipes for weight loss', expected: '3 healthy recipes'}, 'meta-llama/llama-4-scout-17b-16e-instruct'))\""
+  },
+  "keywords": [
+    "ai",
+    "nutrition",
+    "nigerian",
+    "groq",
+    "meal-planning",
+    "testing"
+  ],
+  "author": "NutriVibe Team",
+  "license": "MIT",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,569 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LoaderCircle, Eye, EyeOff, Check, X, AlertCircle } from 'lucide-react';
+import LoadingSpinner from '@/components/ui/loading-spinner';
+import { cn } from '@/lib/utils';
+
+// Validation functions
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password: string) => {
+  const minLength = password.length >= 8;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  
+  return {
+    minLength,
+    hasUpperCase,
+    hasLowerCase,
+    hasNumbers,
+    hasSpecialChar,
+    isValid: minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar
+  };
+};
+
+const getPasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
+  const validation = validatePassword(password);
+  const score = Object.values(validation).filter(Boolean).length - 1; // -1 for isValid
+  
+  if (score < 3) return 'weak';
+  if (score < 5) return 'medium';
+  return 'strong';
+};
+
+const Auth = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp, signIn, user, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Form data states
+  const [signUpData, setSignUpData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [signInData, setSignInData] = useState({
+    email: '',
+    password: ''
+  });
+
+  // UI states
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState('signin');
+  const [isFormTouched, setIsFormTouched] = useState(false);
+
+  // Error states
+  const [signUpErrors, setSignUpErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    general?: string;
+  }>({});
+
+  const [signInErrors, setSignInErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
+
+  // Redirect to dashboard if user is already authenticated
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  // Show loading spinner while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  // Don't render auth form if user is already authenticated
+  if (user) {
+    return null;
+  }
+
+  // Validation handlers
+  const validateSignUpForm = () => {
+    const errors: typeof signUpErrors = {};
+    
+    // Full name validation
+    if (!signUpData.fullName.trim()) {
+      errors.fullName = 'Full name is required';
+    } else if (signUpData.fullName.trim().length < 2) {
+      errors.fullName = 'Full name must be at least 2 characters';
+    }
+    
+    // Email validation
+    if (!signUpData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(signUpData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    // Password validation
+    const passwordValidation = validatePassword(signUpData.password);
+    if (!signUpData.password) {
+      errors.password = 'Password is required';
+    } else if (!passwordValidation.isValid) {
+      errors.password = 'Password does not meet requirements';
+    }
+    
+    // Confirm password validation
+    if (!signUpData.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your password';
+    } else if (signUpData.password !== signUpData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setSignUpErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateSignInForm = () => {
+    const errors: typeof signInErrors = {};
+    
+    if (!signInData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!validateEmail(signInData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!signInData.password) {
+      errors.password = 'Password is required';
+    }
+    
+    setSignInErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsFormTouched(true);
+    
+    if (!validateSignUpForm()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setSignUpErrors({});
+    
+    try {
+      const { error } = await signUp(signUpData.email, signUpData.password, signUpData.fullName);
+      if (error) {
+        setSignUpErrors({ general: error.message || 'Failed to create account. Please try again.' });
+      } else {
+        navigate('/profile-setup');
+      }
+    } catch (err) {
+      setSignUpErrors({ general: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsFormTouched(true);
+    
+    if (!validateSignInForm()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setSignInErrors({});
+    
+    try {
+      const { error } = await signIn(signInData.email, signInData.password);
+      if (error) {
+        setSignInErrors({ general: error.message || 'Invalid email or password' });
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setSignInErrors({ general: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Password Input Component
+  const PasswordInput = ({ 
+    id, 
+    value, 
+    onChange, 
+    placeholder, 
+    showPassword, 
+    onToggleVisibility,
+    error 
+  }: {
+    id: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+    showPassword: boolean;
+    onToggleVisibility: () => void;
+    error?: string;
+  }) => (
+    <div className="relative">
+      <Input
+        id={id}
+        type={showPassword ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={cn(
+          "pr-10",
+          error && "border-destructive focus-visible:ring-destructive"
+        )}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+        onClick={onToggleVisibility}
+      >
+        {showPassword ? (
+          <EyeOff className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <Eye className="h-4 w-4 text-muted-foreground" />
+        )}
+      </Button>
+    </div>
+  );
+
+  // Password Strength Indicator Component
+  const PasswordStrengthIndicator = ({ password }: { password: string }) => {
+    if (!password) return null;
+    
+    const validation = validatePassword(password);
+    const strength = getPasswordStrength(password);
+    
+    const strengthColors = {
+      weak: 'bg-destructive',
+      medium: 'bg-yellow-500',
+      strong: 'bg-green-500'
+    };
+    
+    const strengthLabels = {
+      weak: 'Weak',
+      medium: 'Medium',
+      strong: 'Strong'
+    };
+
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <div className="flex-1 bg-muted rounded-full h-2">
+            <div 
+              className={cn(
+                "h-2 rounded-full transition-all duration-300",
+                strengthColors[strength]
+              )}
+              style={{ 
+                width: strength === 'weak' ? '33%' : strength === 'medium' ? '66%' : '100%' 
+              }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {strengthLabels[strength]}
+          </span>
+        </div>
+        
+        <div className="space-y-1">
+          {[
+            { key: 'minLength', label: 'At least 8 characters' },
+            { key: 'hasUpperCase', label: 'One uppercase letter' },
+            { key: 'hasLowerCase', label: 'One lowercase letter' },
+            { key: 'hasNumbers', label: 'One number' },
+            { key: 'hasSpecialChar', label: 'One special character' }
+          ].map(({ key, label }) => (
+            <div key={key} className="flex items-center space-x-2 text-xs">
+              {validation[key as keyof typeof validation] ? (
+                <Check className="h-3 w-3 text-green-500" />
+              ) : (
+                <X className="h-3 w-3 text-muted-foreground" />
+              )}
+              <span className={cn(
+                validation[key as keyof typeof validation] 
+                  ? "text-green-600" 
+                  : "text-muted-foreground"
+              )}>
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Error Message Component
+  const ErrorMessage = ({ message }: { message?: string }) => {
+    if (!message) return null;
+    
+    return (
+      <div className="flex items-center space-x-2 text-sm text-destructive">
+        <AlertCircle className="h-4 w-4" />
+        <span>{message}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-subtle px-4 py-8">
+      <Card className="w-full max-w-md shadow-elegant border-0">
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            Welcome to NutriVibe
+          </CardTitle>
+          <CardDescription className="text-base">
+            Your personalized meal planning companion
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Tabs 
+            value={activeTab} 
+            onValueChange={(value) => {
+              setActiveTab(value);
+              // Clear errors when switching tabs
+              setSignUpErrors({});
+              setSignInErrors({});
+              setIsFormTouched(false);
+            }} 
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+              <TabsTrigger 
+                value="signin" 
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup"
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                Sign Up
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="signin" className="space-y-4">
+              {signInErrors.general && (
+                <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                  <ErrorMessage message={signInErrors.general} />
+                </div>
+              )}
+              
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    required
+                    value={signInData.email}
+                    onChange={(e) => {
+                      setSignInData({ ...signInData, email: e.target.value });
+                      if (signInErrors.email) {
+                        setSignInErrors({ ...signInErrors, email: undefined });
+                      }
+                    }}
+                    className={cn(
+                      signInErrors.email && "border-destructive focus-visible:ring-destructive"
+                    )}
+                    placeholder="Enter your email"
+                  />
+                  <ErrorMessage message={signInErrors.email} />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">Password</Label>
+                  <PasswordInput
+                    id="signin-password"
+                    value={signInData.password}
+                    onChange={(e) => {
+                      setSignInData({ ...signInData, password: e.target.value });
+                      if (signInErrors.password) {
+                        setSignInErrors({ ...signInErrors, password: undefined });
+                      }
+                    }}
+                    placeholder="Enter your password"
+                    showPassword={showSignInPassword}
+                    onToggleVisibility={() => setShowSignInPassword(!showSignInPassword)}
+                    error={signInErrors.password}
+                  />
+                  <ErrorMessage message={signInErrors.password} />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary/90 hover:to-primary-glow/90 text-white font-medium py-2.5 transition-all duration-200" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="signup" className="space-y-4">
+              {signUpErrors.general && (
+                <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                  <ErrorMessage message={signUpErrors.general} />
+                </div>
+              )}
+              
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-fullname">Full Name</Label>
+                  <Input
+                    id="signup-fullname"
+                    type="text"
+                    required
+                    value={signUpData.fullName}
+                    onChange={(e) => {
+                      setSignUpData({ ...signUpData, fullName: e.target.value });
+                      if (signUpErrors.fullName) {
+                        setSignUpErrors({ ...signUpErrors, fullName: undefined });
+                      }
+                    }}
+                    className={cn(
+                      signUpErrors.fullName && "border-destructive focus-visible:ring-destructive"
+                    )}
+                    placeholder="Enter your full name"
+                  />
+                  <ErrorMessage message={signUpErrors.fullName} />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    required
+                    value={signUpData.email}
+                    onChange={(e) => {
+                      setSignUpData({ ...signUpData, email: e.target.value });
+                      if (signUpErrors.email) {
+                        setSignUpErrors({ ...signUpErrors, email: undefined });
+                      }
+                    }}
+                    className={cn(
+                      signUpErrors.email && "border-destructive focus-visible:ring-destructive"
+                    )}
+                    placeholder="Enter your email"
+                  />
+                  <ErrorMessage message={signUpErrors.email} />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <PasswordInput
+                    id="signup-password"
+                    value={signUpData.password}
+                    onChange={(e) => {
+                      setSignUpData({ ...signUpData, password: e.target.value });
+                      if (signUpErrors.password) {
+                        setSignUpErrors({ ...signUpErrors, password: undefined });
+                      }
+                    }}
+                    placeholder="Create a strong password"
+                    showPassword={showSignUpPassword}
+                    onToggleVisibility={() => setShowSignUpPassword(!showSignUpPassword)}
+                    error={signUpErrors.password}
+                  />
+                  <PasswordStrengthIndicator password={signUpData.password} />
+                  <ErrorMessage message={signUpErrors.password} />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signup-confirm">Confirm Password</Label>
+                  <PasswordInput
+                    id="signup-confirm"
+                    value={signUpData.confirmPassword}
+                    onChange={(e) => {
+                      setSignUpData({ ...signUpData, confirmPassword: e.target.value });
+                      if (signUpErrors.confirmPassword) {
+                        setSignUpErrors({ ...signUpErrors, confirmPassword: undefined });
+                      }
+                    }}
+                    placeholder="Confirm your password"
+                    showPassword={showSignUpConfirmPassword}
+                    onToggleVisibility={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                    error={signUpErrors.confirmPassword}
+                  />
+                  {signUpData.confirmPassword && signUpData.password === signUpData.confirmPassword && (
+                    <div className="flex items-center space-x-2 text-sm text-green-600">
+                      <Check className="h-4 w-4" />
+                      <span>Passwords match</span>
+                    </div>
+                  )}
+                  <ErrorMessage message={signUpErrors.confirmPassword} />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary/90 hover:to-primary-glow/90 text-white font-medium py-2.5 transition-all duration-200" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    'Create Account'
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+          
+          {/* Additional Info */}
+          <div className="text-center space-y-2 pt-4 border-t border-border/50">
+            <p className="text-xs text-muted-foreground">
+              By signing up, you agree to our{' '}
+              <a href="#" className="text-primary hover:underline">Terms of Service</a>
+              {' '}and{' '}
+              <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Need help?{' '}
+              <a href="#" className="text-primary hover:underline">Contact Support</a>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default Auth;
