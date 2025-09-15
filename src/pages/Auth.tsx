@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoaderCircle, Eye, EyeOff, Check, X, AlertCircle } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { cn } from '@/lib/utils';
+import heroFood from '@/assets/hero-food.jpg';
 
 // Hoisted subcomponents to prevent remounts that can cause input focus loss
 const PasswordInput = ({ 
@@ -455,17 +456,46 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-subtle px-4 py-8">
-      <Card className="w-full max-w-md shadow-elegant border-0">
-        <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Welcome to NutriVibe
-          </CardTitle>
-          <CardDescription className="text-base">
-            Your personalized meal planning companion
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-emerald-100">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 items-center">
+          {/* Left: Brand/Benefits */}
+          <div className="order-2 lg:order-1">
+            <div className="relative overflow-hidden rounded-2xl border bg-white/60 backdrop-blur-md p-6 sm:p-8">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-transparent to-primary/5 pointer-events-none" />
+              <div className="relative z-10 space-y-4">
+                <div className="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-emerald-700 text-xs font-medium">
+                  Eat well, live vibrant
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-black leading-tight tracking-tight text-foreground">
+                  Welcome to <span className="text-emerald-600">NutriVibe</span>
+                </h1>
+                <p className="text-muted-foreground max-w-prose">
+                  Personalized Nigerian-inspired meal plans, recipes, and smart shopping lists, tailored to your goals and preferences.
+                </p>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-600" /> AI-powered meal plans</li>
+                  <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-600" /> Local, budget-friendly shopping lists</li>
+                  <li className="flex items-start gap-2"><span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-600" /> Culturally-aware nutrition guidance</li>
+                </ul>
+              </div>
+              <img src={heroFood} alt="Healthy meals"
+                   className="relative z-0 mt-6 aspect-[16/9] w-full rounded-xl object-cover ring-1 ring-emerald-200/60" />
+            </div>
+          </div>
+
+          {/* Right: Auth Card */}
+          <div className="order-1 lg:order-2">
+            <Card className="w-full max-w-md ml-auto shadow-elegant border-0">
+              <CardHeader className="text-center space-y-2">
+                <CardTitle className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                  Sign in to continue
+                </CardTitle>
+                <CardDescription className="text-sm sm:text-base">
+                  Your personalized meal planning companion
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
           <Tabs 
             value={activeTab} 
             onValueChange={(value) => {
@@ -670,21 +700,24 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
           
-          {/* Additional Info */}
-          <div className="text-center space-y-2 pt-4 border-t border-border/50">
-            <p className="text-xs text-muted-foreground">
-              By signing up, you agree to our{' '}
-              <a href="#" className="text-primary hover:underline">Terms of Service</a>
-              {' '}and{' '}
-              <a href="#" className="text-primary hover:underline">Privacy Policy</a>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Need help?{' '}
-              <a href="#" className="text-primary hover:underline">Contact Support</a>
-            </p>
+                {/* Additional Info */}
+                <div className="text-center space-y-2 pt-4 border-t border-border/50">
+                  <p className="text-xs text-muted-foreground">
+                    By signing up, you agree to our{' '}
+                    <a href="/legal/terms" className="text-primary hover:underline">Terms of Service</a>
+                    {' '}and{' '}
+                    <a href="/legal/privacy" className="text-primary hover:underline">Privacy Policy</a>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Need help?{' '}
+                    <a href="/support" className="text-primary hover:underline">Contact Support</a>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
