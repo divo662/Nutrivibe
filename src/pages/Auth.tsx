@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,40 @@ import LoadingSpinner from '@/components/ui/loading-spinner';
 import { cn } from '@/lib/utils';
 import heroFood from '@/assets/hero-food.jpg';
 
-// Hoisted subcomponents to prevent remounts that can cause input focus loss
-const PasswordInput = ({ 
+// Validation functions (hoisted to prevent recreation)
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password: string) => {
+  const minLength = password.length >= 8;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  
+  return {
+    minLength,
+    hasUpperCase,
+    hasLowerCase,
+    hasNumbers,
+    hasSpecialChar,
+    isValid: minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar
+  };
+};
+
+const getPasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
+  const validation = validatePassword(password);
+  const score = Object.values(validation).filter(Boolean).length - 1; // -1 for isValid
+  
+  if (score < 3) return 'weak';
+  if (score < 5) return 'medium';
+  return 'strong';
+};
+
+// Memoized PasswordInput component to prevent unnecessary re-renders
+const PasswordInput = memo(({ 
   id, 
   value, 
   onChange, 
@@ -28,37 +60,43 @@ const PasswordInput = ({
   showPassword: boolean;
   onToggleVisibility: () => void;
   error?: string;
-}) => (
-  <div className="relative">
-    <Input
-      id={id}
-      type={showPassword ? "text" : "password"}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={cn(
-        "pr-10",
-        error && "border-destructive focus-visible:ring-destructive"
-      )}
-    />
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-      onClick={onToggleVisibility}
-      tabIndex={-1}
-    >
-      {showPassword ? (
-        <EyeOff className="h-4 w-4 text-muted-foreground" />
-      ) : (
-        <Eye className="h-4 w-4 text-muted-foreground" />
-      )}
-    </Button>
-  </div>
-);
+}) => {
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={showPassword ? "text" : "password"}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={cn(
+          "pr-10",
+          error && "border-destructive focus-visible:ring-destructive"
+        )}
+        autoComplete={id.includes('signin') ? 'current-password' : 'new-password'}
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+        onClick={onToggleVisibility}
+        tabIndex={-1}
+      >
+        {showPassword ? (
+          <EyeOff className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <Eye className="h-4 w-4 text-muted-foreground" />
+        )}
+      </Button>
+    </div>
+  );
+});
 
-const PasswordStrengthIndicator = ({ password }: { password: string }) => {
+PasswordInput.displayName = 'PasswordInput';
+
+// Memoized PasswordStrengthIndicator
+const PasswordStrengthIndicator = memo(({ password }: { password: string }) => {
   if (!password) return null;
   
   const validation = validatePassword(password);
@@ -121,9 +159,12 @@ const PasswordStrengthIndicator = ({ password }: { password: string }) => {
       </div>
     </div>
   );
-};
+});
 
-const ErrorMessage = ({ message }: { message?: string }) => {
+PasswordStrengthIndicator.displayName = 'PasswordStrengthIndicator';
+
+// Memoized ErrorMessage
+const ErrorMessage = memo(({ message }: { message?: string }) => {
   if (!message) return null;
   
   return (
@@ -132,39 +173,9 @@ const ErrorMessage = ({ message }: { message?: string }) => {
       <span>{message}</span>
     </div>
   );
-};
+});
 
-// Validation functions
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-const validatePassword = (password: string) => {
-  const minLength = password.length >= 8;
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasNumbers = /\d/.test(password);
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  
-  return {
-    minLength,
-    hasUpperCase,
-    hasLowerCase,
-    hasNumbers,
-    hasSpecialChar,
-    isValid: minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar
-  };
-};
-
-const getPasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
-  const validation = validatePassword(password);
-  const score = Object.values(validation).filter(Boolean).length - 1; // -1 for isValid
-  
-  if (score < 3) return 'weak';
-  if (score < 5) return 'medium';
-  return 'strong';
-};
+ErrorMessage.displayName = 'ErrorMessage';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -189,7 +200,6 @@ const Auth = () => {
   const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
-  const [isFormTouched, setIsFormTouched] = useState(false);
 
   // Error states
   const [signUpErrors, setSignUpErrors] = useState<{
@@ -281,9 +291,9 @@ const Auth = () => {
     return Object.keys(errors).length === 0;
   };
 
+  // Form submission handlers
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsFormTouched(true);
     
     if (!validateSignUpForm()) {
       return;
@@ -308,7 +318,6 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsFormTouched(true);
     
     if (!validateSignInForm()) {
       return;
@@ -331,128 +340,66 @@ const Auth = () => {
     }
   };
 
-  // Password Input Component
-  const PasswordInput = ({ 
-    id, 
-    value, 
-    onChange, 
-    placeholder, 
-    showPassword, 
-    onToggleVisibility,
-    error 
-  }: {
-    id: string;
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    placeholder: string;
-    showPassword: boolean;
-    onToggleVisibility: () => void;
-    error?: string;
-  }) => (
-    <div className="relative">
-      <Input
-        id={id}
-        type={showPassword ? "text" : "password"}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        className={cn(
-          "pr-10",
-          error && "border-destructive focus-visible:ring-destructive"
-        )}
-      />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-        onClick={onToggleVisibility}
-      >
-        {showPassword ? (
-          <EyeOff className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <Eye className="h-4 w-4 text-muted-foreground" />
-        )}
-      </Button>
-    </div>
-  );
+  // Create stable toggle functions
+  const toggleSignInPassword = useCallback(() => setShowSignInPassword(prev => !prev), []);
+  const toggleSignUpPassword = useCallback(() => setShowSignUpPassword(prev => !prev), []);
+  const toggleSignUpConfirmPassword = useCallback(() => setShowSignUpConfirmPassword(prev => !prev), []);
 
-  // Password Strength Indicator Component
-  const PasswordStrengthIndicator = ({ password }: { password: string }) => {
-    if (!password) return null;
-    
-    const validation = validatePassword(password);
-    const strength = getPasswordStrength(password);
-    
-    const strengthColors = {
-      weak: 'bg-destructive',
-      medium: 'bg-yellow-500',
-      strong: 'bg-green-500'
-    };
-    
-    const strengthLabels = {
-      weak: 'Weak',
-      medium: 'Medium',
-      strong: 'Strong'
-    };
+  // Create stable change handlers for sign in
+  const handleSignInEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSignInData(prev => ({ ...prev, email: value }));
+    if (signInErrors.email) {
+      setSignInErrors(prev => ({ ...prev, email: undefined }));
+    }
+  }, [signInErrors.email]);
 
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center space-x-2">
-          <div className="flex-1 bg-muted rounded-full h-2">
-            <div 
-              className={cn(
-                "h-2 rounded-full transition-all duration-300",
-                strengthColors[strength]
-              )}
-              style={{ 
-                width: strength === 'weak' ? '33%' : strength === 'medium' ? '66%' : '100%' 
-              }}
-            />
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {strengthLabels[strength]}
-          </span>
-        </div>
-        
-        <div className="space-y-1">
-          {[
-            { key: 'minLength', label: 'At least 8 characters' },
-            { key: 'hasUpperCase', label: 'One uppercase letter' },
-            { key: 'hasLowerCase', label: 'One lowercase letter' },
-            { key: 'hasNumbers', label: 'One number' },
-            { key: 'hasSpecialChar', label: 'One special character' }
-          ].map(({ key, label }) => (
-            <div key={key} className="flex items-center space-x-2 text-xs">
-              {validation[key as keyof typeof validation] ? (
-                <Check className="h-3 w-3 text-green-500" />
-              ) : (
-                <X className="h-3 w-3 text-muted-foreground" />
-              )}
-              <span className={cn(
-                validation[key as keyof typeof validation] 
-                  ? "text-green-600" 
-                  : "text-muted-foreground"
-              )}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
+  const handleSignInPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSignInData(prev => ({ ...prev, password: value }));
+    if (signInErrors.password) {
+      setSignInErrors(prev => ({ ...prev, password: undefined }));
+    }
+  }, [signInErrors.password]);
 
-  // Error Message Component
-  const ErrorMessage = ({ message }: { message?: string }) => {
-    if (!message) return null;
-    
-    return (
-      <div className="flex items-center space-x-2 text-sm text-destructive">
-        <AlertCircle className="h-4 w-4" />
-        <span>{message}</span>
-      </div>
-    );
+  // Create stable change handlers for sign up
+  const handleSignUpFullNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSignUpData(prev => ({ ...prev, fullName: value }));
+    if (signUpErrors.fullName) {
+      setSignUpErrors(prev => ({ ...prev, fullName: undefined }));
+    }
+  }, [signUpErrors.fullName]);
+
+  const handleSignUpEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSignUpData(prev => ({ ...prev, email: value }));
+    if (signUpErrors.email) {
+      setSignUpErrors(prev => ({ ...prev, email: undefined }));
+    }
+  }, [signUpErrors.email]);
+
+  const handleSignUpPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSignUpData(prev => ({ ...prev, password: value }));
+    if (signUpErrors.password) {
+      setSignUpErrors(prev => ({ ...prev, password: undefined }));
+    }
+  }, [signUpErrors.password]);
+
+  const handleSignUpConfirmPasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSignUpData(prev => ({ ...prev, confirmPassword: value }));
+    if (signUpErrors.confirmPassword) {
+      setSignUpErrors(prev => ({ ...prev, confirmPassword: undefined }));
+    }
+  }, [signUpErrors.confirmPassword]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Clear errors when switching tabs
+    setSignUpErrors({});
+    setSignInErrors({});
   };
 
   return (
@@ -496,210 +443,177 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-          <Tabs 
-            value={activeTab} 
-            onValueChange={(value) => {
-              setActiveTab(value);
-              // Clear errors when switching tabs
-              setSignUpErrors({});
-              setSignInErrors({});
-              setIsFormTouched(false);
-            }} 
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-              <TabsTrigger 
-                value="signin" 
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Sign In
-              </TabsTrigger>
-              <TabsTrigger 
-                value="signup"
-                className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Sign Up
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin" className="space-y-4">
-              {signInErrors.general && (
-                <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
-                  <ErrorMessage message={signInErrors.general} />
-                </div>
-              )}
-              
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <Input
-                    id="signin-email"
-                    type="email"
-                    required
-                    value={signInData.email}
-                    onChange={(e) => {
-                      setSignInData({ ...signInData, email: e.target.value });
-                      if (signInErrors.email) {
-                        setSignInErrors({ ...signInErrors, email: undefined });
-                      }
-                    }}
-                    className={cn(
-                      signInErrors.email && "border-destructive focus-visible:ring-destructive"
-                    )}
-                    placeholder="Enter your email"
-                  />
-                  <ErrorMessage message={signInErrors.email} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <PasswordInput
-                    id="signin-password"
-                    value={signInData.password}
-                    onChange={(e) => {
-                      setSignInData({ ...signInData, password: e.target.value });
-                      if (signInErrors.password) {
-                        setSignInErrors({ ...signInErrors, password: undefined });
-                      }
-                    }}
-                    placeholder="Enter your password"
-                    showPassword={showSignInPassword}
-                    onToggleVisibility={() => setShowSignInPassword(!showSignInPassword)}
-                    error={signInErrors.password}
-                  />
-                  <ErrorMessage message={signInErrors.password} />
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary/90 hover:to-primary-glow/90 text-white font-medium py-2.5 transition-all duration-200" 
-                  disabled={isLoading}
+                <Tabs 
+                  value={activeTab} 
+                  onValueChange={handleTabChange}
+                  className="w-full"
                 >
-                  {isLoading ? (
-                    <>
-                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                      Signing In...
-                    </>
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="signup" className="space-y-4">
-              {signUpErrors.general && (
-                <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
-                  <ErrorMessage message={signUpErrors.general} />
-                </div>
-              )}
-              
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-fullname">Full Name</Label>
-                  <Input
-                    id="signup-fullname"
-                    type="text"
-                    required
-                    value={signUpData.fullName}
-                    onChange={(e) => {
-                      setSignUpData({ ...signUpData, fullName: e.target.value });
-                      if (signUpErrors.fullName) {
-                        setSignUpErrors({ ...signUpErrors, fullName: undefined });
-                      }
-                    }}
-                    className={cn(
-                      signUpErrors.fullName && "border-destructive focus-visible:ring-destructive"
+                  <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+                    <TabsTrigger 
+                      value="signin" 
+                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                    >
+                      Sign In
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="signup"
+                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                    >
+                      Sign Up
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="signin" className="space-y-4">
+                    {signInErrors.general && (
+                      <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                        <ErrorMessage message={signInErrors.general} />
+                      </div>
                     )}
-                    placeholder="Enter your full name"
-                  />
-                  <ErrorMessage message={signUpErrors.fullName} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    required
-                    value={signUpData.email}
-                    onChange={(e) => {
-                      setSignUpData({ ...signUpData, email: e.target.value });
-                      if (signUpErrors.email) {
-                        setSignUpErrors({ ...signUpErrors, email: undefined });
-                      }
-                    }}
-                    className={cn(
-                      signUpErrors.email && "border-destructive focus-visible:ring-destructive"
+                    
+                    <form onSubmit={handleSignIn} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-email">Email</Label>
+                        <Input
+                          id="signin-email"
+                          type="email"
+                          required
+                          value={signInData.email}
+                          onChange={handleSignInEmailChange}
+                          className={cn(
+                            signInErrors.email && "border-destructive focus-visible:ring-destructive"
+                          )}
+                          placeholder="Enter your email"
+                          autoComplete="email"
+                        />
+                        <ErrorMessage message={signInErrors.email} />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-password">Password</Label>
+                        <PasswordInput
+                          id="signin-password"
+                          value={signInData.password}
+                          onChange={handleSignInPasswordChange}
+                          placeholder="Enter your password"
+                          showPassword={showSignInPassword}
+                          onToggleVisibility={toggleSignInPassword}
+                          error={signInErrors.password}
+                        />
+                        <ErrorMessage message={signInErrors.password} />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary/90 hover:to-primary-glow/90 text-white font-medium py-2.5 transition-all duration-200" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            Signing In...
+                          </>
+                        ) : (
+                          'Sign In'
+                        )}
+                      </Button>
+                    </form>
+                  </TabsContent>
+                  
+                  <TabsContent value="signup" className="space-y-4">
+                    {signUpErrors.general && (
+                      <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20">
+                        <ErrorMessage message={signUpErrors.general} />
+                      </div>
                     )}
-                    placeholder="Enter your email"
-                  />
-                  <ErrorMessage message={signUpErrors.email} />
-                </div>
+                    
+                    <form onSubmit={handleSignUp} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-fullname">Full Name</Label>
+                        <Input
+                          id="signup-fullname"
+                          type="text"
+                          required
+                          value={signUpData.fullName}
+                          onChange={handleSignUpFullNameChange}
+                          className={cn(
+                            signUpErrors.fullName && "border-destructive focus-visible:ring-destructive"
+                          )}
+                          placeholder="Enter your full name"
+                          autoComplete="name"
+                        />
+                        <ErrorMessage message={signUpErrors.fullName} />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email">Email</Label>
+                        <Input
+                          id="signup-email"
+                          type="email"
+                          required
+                          value={signUpData.email}
+                          onChange={handleSignUpEmailChange}
+                          className={cn(
+                            signUpErrors.email && "border-destructive focus-visible:ring-destructive"
+                          )}
+                          placeholder="Enter your email"
+                          autoComplete="email"
+                        />
+                        <ErrorMessage message={signUpErrors.email} />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password">Password</Label>
+                        <PasswordInput
+                          id="signup-password"
+                          value={signUpData.password}
+                          onChange={handleSignUpPasswordChange}
+                          placeholder="Create a strong password"
+                          showPassword={showSignUpPassword}
+                          onToggleVisibility={toggleSignUpPassword}
+                          error={signUpErrors.password}
+                        />
+                        <PasswordStrengthIndicator password={signUpData.password} />
+                        <ErrorMessage message={signUpErrors.password} />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-confirm">Confirm Password</Label>
+                        <PasswordInput
+                          id="signup-confirm"
+                          value={signUpData.confirmPassword}
+                          onChange={handleSignUpConfirmPasswordChange}
+                          placeholder="Confirm your password"
+                          showPassword={showSignUpConfirmPassword}
+                          onToggleVisibility={toggleSignUpConfirmPassword}
+                          error={signUpErrors.confirmPassword}
+                        />
+                        {signUpData.confirmPassword && signUpData.password === signUpData.confirmPassword && (
+                          <div className="flex items-center space-x-2 text-sm text-green-600">
+                            <Check className="h-4 w-4" />
+                            <span>Passwords match</span>
+                          </div>
+                        )}
+                        <ErrorMessage message={signUpErrors.confirmPassword} />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary/90 hover:to-primary-glow/90 text-white font-medium py-2.5 transition-all duration-200" 
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                            Creating Account...
+                          </>
+                        ) : (
+                          'Create Account'
+                        )}
+                      </Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <PasswordInput
-                    id="signup-password"
-                    value={signUpData.password}
-                    onChange={(e) => {
-                      setSignUpData({ ...signUpData, password: e.target.value });
-                      if (signUpErrors.password) {
-                        setSignUpErrors({ ...signUpErrors, password: undefined });
-                      }
-                    }}
-                    placeholder="Create a strong password"
-                    showPassword={showSignUpPassword}
-                    onToggleVisibility={() => setShowSignUpPassword(!showSignUpPassword)}
-                    error={signUpErrors.password}
-                  />
-                  <PasswordStrengthIndicator password={signUpData.password} />
-                  <ErrorMessage message={signUpErrors.password} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-confirm">Confirm Password</Label>
-                  <PasswordInput
-                    id="signup-confirm"
-                    value={signUpData.confirmPassword}
-                    onChange={(e) => {
-                      setSignUpData({ ...signUpData, confirmPassword: e.target.value });
-                      if (signUpErrors.confirmPassword) {
-                        setSignUpErrors({ ...signUpErrors, confirmPassword: undefined });
-                      }
-                    }}
-                    placeholder="Confirm your password"
-                    showPassword={showSignUpConfirmPassword}
-                    onToggleVisibility={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
-                    error={signUpErrors.confirmPassword}
-                  />
-                  {signUpData.confirmPassword && signUpData.password === signUpData.confirmPassword && (
-                    <div className="flex items-center space-x-2 text-sm text-green-600">
-                      <Check className="h-4 w-4" />
-                      <span>Passwords match</span>
-                    </div>
-                  )}
-                  <ErrorMessage message={signUpErrors.confirmPassword} />
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-primary to-primary-glow hover:from-primary/90 hover:to-primary-glow/90 text-white font-medium py-2.5 transition-all duration-200" 
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Account...
-                    </>
-                  ) : (
-                    'Create Account'
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-          
                 {/* Additional Info */}
                 <div className="text-center space-y-2 pt-4 border-t border-border/50">
                   <p className="text-xs text-muted-foreground">

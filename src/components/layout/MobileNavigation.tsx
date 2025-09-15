@@ -46,14 +46,14 @@ const MobileNavigation: React.FC = () => {
 				<>
 					{/* Backdrop */}
 					<div
-						className="fixed inset-0 bg-black/50 z-40"
+						className="fixed inset-0 bg-black/60 z-40"
 						onClick={closeMenu}
 					/>
 					
 					{/* Menu Panel */}
-					<div className="fixed left-0 top-0 h-full w-80 bg-white z-50 shadow-xl transform transition-transform duration-300 ease-in-out">
+					<div className="fixed left-0 top-0 h-full w-full sm:max-w-[24rem] bg-white z-50 shadow-2xl border-r overflow-y-auto transform transition-transform duration-300 ease-in-out">
 						{/* Header */}
-						<div className="h-16 px-6 flex items-center justify-between border-b">
+						<div className="h-16 px-6 flex items-center justify-between border-b bg-white">
 							<div className="font-semibold text-lg tracking-tight">NutriVibe</div>
 							<Button
 								variant="ghost"
@@ -91,9 +91,9 @@ const MobileNavigation: React.FC = () => {
 									onClick={closeMenu}
 									className={({ isActive }) =>
 										cn(
-											'group flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-colors',
+											'relative flex items-center gap-3 rounded-md px-3 py-3 text-[15px] font-medium transition-colors',
 											isActive
-												? 'bg-emerald-50 text-emerald-700'
+												? 'bg-emerald-50 text-emerald-700 border-l-2 border-emerald-600 pl-2'
 												: 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
 										)
 									}
@@ -105,7 +105,7 @@ const MobileNavigation: React.FC = () => {
 						</nav>
 
 						{/* Logout Button */}
-						<div className="p-3 border-t">
+						<div className="p-3 border-t bg-white">
 							<Button
 								variant="ghost"
 								className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"

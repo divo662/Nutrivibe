@@ -23,7 +23,7 @@ const Sidebar: React.FC = () => {
 	const { signOut } = useAuth();
 
 	return (
-		<div className="hidden lg:flex lg:w-64 flex-col border-r bg-white/70 backdrop-blur-sm">
+		<div className="hidden lg:flex lg:w-64 flex-col border-r bg-white">
 			<div className="h-16 px-5 flex items-center font-semibold text-lg tracking-tight">NutriVibe</div>
 			<nav className="flex-1 px-2 space-y-1">
 				{items.map((item) => (
