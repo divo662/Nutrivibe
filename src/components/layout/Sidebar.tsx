@@ -17,7 +17,6 @@ const items: SidebarItem[] = [
 	{ to: '/ai/recipes', label: 'AI Recipes', icon: <BookOpen className="h-4 w-4" /> },
 	{ to: '/ai/shopping', label: 'AI Shopping', icon: <ShoppingCart className="h-4 w-4" /> },
 	{ to: '/settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> },
-	{ to: '/help', label: 'Help', icon: <HelpCircle className="h-4 w-4" /> },
 ];
 
 const Sidebar: React.FC = () => {

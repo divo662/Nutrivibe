@@ -10,6 +10,129 @@ import { LoaderCircle, Eye, EyeOff, Check, X, AlertCircle } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { cn } from '@/lib/utils';
 
+// Hoisted subcomponents to prevent remounts that can cause input focus loss
+const PasswordInput = ({ 
+  id, 
+  value, 
+  onChange, 
+  placeholder, 
+  showPassword, 
+  onToggleVisibility,
+  error 
+}: {
+  id: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+  showPassword: boolean;
+  onToggleVisibility: () => void;
+  error?: string;
+}) => (
+  <div className="relative">
+    <Input
+      id={id}
+      type={showPassword ? "text" : "password"}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className={cn(
+        "pr-10",
+        error && "border-destructive focus-visible:ring-destructive"
+      )}
+    />
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+      onClick={onToggleVisibility}
+      tabIndex={-1}
+    >
+      {showPassword ? (
+        <EyeOff className="h-4 w-4 text-muted-foreground" />
+      ) : (
+        <Eye className="h-4 w-4 text-muted-foreground" />
+      )}
+    </Button>
+  </div>
+);
+
+const PasswordStrengthIndicator = ({ password }: { password: string }) => {
+  if (!password) return null;
+  
+  const validation = validatePassword(password);
+  const strength = getPasswordStrength(password);
+  
+  const strengthColors = {
+    weak: 'bg-destructive',
+    medium: 'bg-yellow-500',
+    strong: 'bg-green-500'
+  } as const;
+  
+  const strengthLabels = {
+    weak: 'Weak',
+    medium: 'Medium',
+    strong: 'Strong'
+  } as const;
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center space-x-2">
+        <div className="flex-1 bg-muted rounded-full h-2">
+          <div 
+            className={cn(
+              "h-2 rounded-full transition-all duration-300",
+              strengthColors[strength]
+            )}
+            style={{ 
+              width: strength === 'weak' ? '33%' : strength === 'medium' ? '66%' : '100%'
+            }}
+          />
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {strengthLabels[strength]}
+        </span>
+      </div>
+      
+      <div className="space-y-1">
+        {[
+          { key: 'minLength', label: 'At least 8 characters' },
+          { key: 'hasUpperCase', label: 'One uppercase letter' },
+          { key: 'hasLowerCase', label: 'One lowercase letter' },
+          { key: 'hasNumbers', label: 'One number' },
+          { key: 'hasSpecialChar', label: 'One special character' }
+        ].map(({ key, label }) => (
+          <div key={key} className="flex items-center space-x-2 text-xs">
+            {validation[key as keyof typeof validation] ? (
+              <Check className="h-3 w-3 text-green-500" />
+            ) : (
+              <X className="h-3 w-3 text-muted-foreground" />
+            )}
+            <span className={cn(
+              validation[key as keyof typeof validation] 
+                ? "text-green-600" 
+                : "text-muted-foreground"
+            )}>
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ErrorMessage = ({ message }: { message?: string }) => {
+  if (!message) return null;
+  
+  return (
+    <div className="flex items-center space-x-2 text-sm text-destructive">
+      <AlertCircle className="h-4 w-4" />
+      <span>{message}</span>
+    </div>
+  );
+};
+
 // Validation functions
 const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

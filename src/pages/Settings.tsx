@@ -88,6 +88,19 @@ const Settings = () => {
     personalizedRecommendations: true
   });
 
+  const formatNaira = (amount: number | string | null | undefined) => {
+    let n = typeof amount === 'string' ? parseFloat(amount) : (amount ?? 0);
+    // Handle values provided in kobo (e.g., 250000 => ₦2,500)
+    if (Number.isFinite(n) && n >= 10000 && Math.round(n) % 100 === 0) {
+      n = n / 100;
+    }
+    try {
+      return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(n);
+    } catch {
+      return `₦${Number(n).toLocaleString('en-NG', { maximumFractionDigits: 0 })}`;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -620,7 +633,7 @@ const Settings = () => {
                     <div>
                       <h4 className="font-semibold">{plan.name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        ${plan.price}/{plan.interval}
+                        {formatNaira(plan.price)}/{plan.interval}
                       </p>
                       <ul className="text-sm text-muted-foreground mt-2 space-y-1">
                         <li className="flex items-center gap-2">

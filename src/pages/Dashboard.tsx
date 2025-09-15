@@ -4,15 +4,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Target, Crown, Zap } from 'lucide-react';
+import { Target, Crown, Zap, Calendar, ListChecks, BarChart3, Eye } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import LoadingSpinner from '@/components/ui/loading-spinner';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { debounce } from 'lodash';
-import HeroBanner from '@/components/dashboard/HeroBanner';
-import MealToday from '@/components/dashboard/MealToday';
+// Removed HeroBanner and MealToday for a cleaner, more functional layout
 import ShoppingList from '@/components/dashboard/ShoppingList';
 import { Badge } from '@/components/ui/badge';
+import StructuredMealPlanDisplay from '@/components/ai/StructuredMealPlanDisplay';
 
 interface Profile {
   full_name: string | null;
@@ -28,7 +28,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { subscription, getUsageStats } = useSubscription();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [mealPlans, setMealPlans] = useState([]);
+  const [mealPlans, setMealPlans] = useState<any[]>([]);
+  const [latestMealPlan, setLatestMealPlan] = useState<any | null>(null);
   const [usageStats, setUsageStats] = useState({
     dailyUsage: 0,
     monthlyUsage: 0,
@@ -75,6 +76,7 @@ const Dashboard = () => {
     if (user) {
       debouncedFetchProfile();
       loadUsageStats();
+      loadLatestMealPlan();
     }
   }, [user, debouncedFetchProfile]);
 
@@ -84,6 +86,35 @@ const Dashboard = () => {
       setUsageStats(stats);
     } catch (error) {
       console.error('Error loading usage stats:', error);
+    }
+  };
+
+  const loadLatestMealPlan = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        setLatestMealPlan({
+          id: data.id,
+          title: data.title,
+          created_at: data.created_at,
+          total_days: (data as any).total_days || 0,
+          estimated_calories: (data as any).estimated_calories || 0,
+          data: data.data
+        });
+      } else {
+        setLatestMealPlan(null);
+      }
+    } catch (e) {
+      console.error('Error loading latest meal plan:', e);
+      setLatestMealPlan(null);
     }
   };
 
@@ -117,30 +148,92 @@ const Dashboard = () => {
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <HeroBanner />
+
+        {/* Welcome summary moved to the top */}
+        <div className="mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+            Welcome back, {profile.full_name || 'there'}! 👋
+          </h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            {profile.fitness_goal 
+              ? `Ready to fuel your ${formatGoal(profile.fitness_goal)} journey?`
+              : 'Complete your profile to get personalized recommendations!'
+            }
+            {subscription && (
+              <span className="ml-2 inline-flex items-center gap-1">
+                {subscription.plan === 'free' ? (
+                  <Zap className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <Crown className="h-4 w-4 text-yellow-600" />
+                )}
+                <span className="text-sm font-medium">
+                  {subscription.plan === 'free' ? 'Free Plan' : 'Pro Plan'}
+                </span>
+              </span>
+            )}
+          </p>
+        </div>
+
+        {/* Key Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <Calendar className="h-4 w-4" /> Meal Plans
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{mealPlans.length || (latestMealPlan ? 1 : 0)}</div>
+              <p className="text-xs text-muted-foreground">Total saved</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <ListChecks className="h-4 w-4" /> Daily Usage
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{usageStats.dailyUsage}/{usageStats.dailyLimit}</div>
+              <p className="text-xs text-muted-foreground">AI generations today</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <BarChart3 className="h-4 w-4" /> Monthly Usage
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{usageStats.monthlyUsage}/{usageStats.monthlyLimit}</div>
+              <p className="text-xs text-muted-foreground">This month</p>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <MealToday />
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+
+            {/* Compact Meal Plan card linking to full view */}
             <Card>
-              <CardHeader className="pb-3 sm:pb-4">
-                <CardTitle className="text-base sm:text-lg">Featured Recipe</CardTitle>
+              <CardHeader className="pb-2 sm:pb-3">
+                <CardTitle className="flex items-center justify-between text-base sm:text-lg">
+                  <span className="truncate">AI Meal Plan {latestMealPlan?.total_days ? `(${latestMealPlan.total_days} days)` : ''}</span>
+                  <Button size="sm" variant="outline" className="gap-2" onClick={() => navigate('/ai/meal-plan')}>
+                    <Eye className="h-4 w-4" /> View
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm text-muted-foreground">Red Bread & Jam</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3 sm:pb-4">
-                <CardTitle className="text-base sm:text-lg">Chef's Pick</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">Grilled Chicken</div>
+                <div className="text-sm text-muted-foreground">
+                  {latestMealPlan ? 'Your latest plan is ready. Click view to open it.' : 'You have no meal plans yet. Generate one in AI → Meal Plan.'}
+                </div>
               </CardContent>
             </Card>
           </div>
           <div className="space-y-3 sm:space-y-4">
-            <ShoppingList />
+            <ShoppingList limit={5} onViewAll={() => navigate('/ai/shopping')} />
+            {/* AI Usage Status */}
             <Card>
               <CardHeader className="pb-3 sm:pb-4">
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -185,28 +278,6 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Welcome back, {profile.full_name || 'there'}! 👋
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            {profile.fitness_goal 
-              ? `Ready to fuel your ${formatGoal(profile.fitness_goal)} journey?`
-              : 'Complete your profile to get personalized recommendations!'
-            }
-            {subscription && (
-              <span className="ml-2 inline-flex items-center gap-1">
-                {subscription.plan === 'free' ? (
-                  <Zap className="h-4 w-4 text-blue-600" />
-                ) : (
-                  <Crown className="h-4 w-4 text-yellow-600" />
-                )}
-                <span className="text-sm font-medium">
-                  {subscription.plan === 'free' ? 'Free Plan' : 'Pro Plan'}
-                </span>
-              </span>
-            )}
-          </p>
-          
           {(!profile.fitness_goal || !profile.dietary_preference) && (
             <div className="mt-4 p-3 sm:p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex items-center gap-2 text-amber-800">
