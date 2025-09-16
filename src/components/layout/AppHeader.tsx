@@ -9,7 +9,7 @@ const AppHeader: React.FC = () => {
 	const { subscription } = useSubscription();
 
 	return (
-		<header className="h-16 border-b bg-white/70 backdrop-blur-sm px-4 lg:px-6 flex items-center gap-4">
+		<header className="h-16 border-b bg-white px-4 lg:px-6 flex items-center gap-4">
 			{/* Mobile Navigation */}
 			<MobileNavigation />
 			

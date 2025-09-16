@@ -30,12 +30,13 @@ type ProfileRow = {
 type Recipe = {
   id: string;
   title: string;
-  summary: string;
-  cuisine: string;
-  difficulty: string;
-  cooking_time: string;
+  summary?: string;
+  cuisine?: string;
+  difficulty?: string;
+  cooking_time?: string;
   created_at: string;
   data: any;
+  image_url?: string | null;
 };
 
 type ChatMessage = {
@@ -114,12 +115,12 @@ const RecipesAI: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('recipes')
-        .select('*')
+        .select('id, user_id, title, summary, cuisine, difficulty, cooking_time, created_at, data, image_url')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setRecipes(data || []);
+      setRecipes((data as any) || []);
     } catch (error) {
       console.error('Error loading recipes:', error);
     } finally {
@@ -946,43 +947,9 @@ I'm here to help you perfect your recipe. Here's what I can do for you:
             {loading && <LoadingSpinner />}
           </div>
                 
-                {/* Helpful Tips */}
-                <div className="lg:col-span-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h4 className="font-medium text-blue-800 mb-2">💡 Recipe Generation Tips:</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• <strong>Recipe Request:</strong> Be specific! Tell me exactly what you want to cook (e.g., "egusi soup", "jollof rice")</li>
-                    <li>• <strong>Ingredients:</strong> List what you have available - I'll suggest recipes using them!</li>
-                    <li>• <strong>Cuisine:</strong> Choose your preferred style or let me surprise you with Nigerian classics</li>
-                    <li>• <strong>Dietary Needs:</strong> Tell me about any restrictions so I can adapt recipes accordingly</li>
-                    <li>• <strong>Time & Skill:</strong> Be honest about your constraints - I'll make recipes that fit your lifestyle</li>
-                  </ul>
-                </div>
+
                 
-                {/* Popular Recipe Ideas */}
-                <div className="lg:col-span-2 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <h4 className="font-medium text-green-800 mb-2">🍽️ Popular Nigerian Recipe Ideas:</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-green-700">
-                    <div>
-                      <strong>Quick & Easy:</strong>
-                      <ul className="mt-1 space-y-1">
-                        <li>• "I want a quick egusi soup recipe"</li>
-                        <li>• "Make me jollof rice in 30 minutes"</li>
-                        <li>• "Quick Nigerian breakfast ideas"</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <strong>Traditional Favorites:</strong>
-                      <ul className="mt-1 space-y-1">
-                        <li>• "Traditional pounded yam and efo riro"</li>
-                        <li>• "Authentic Nigerian suya recipe"</li>
-                        <li>• "How to make moi moi from scratch"</li>
-                      </ul>
-                    </div>
-                  </div>
-                  <p className="text-xs text-green-600 mt-2">
-                    💡 <strong>Pro Tip:</strong> Type exactly what you want! Try "I want a quick Nigerian recipe for egusi soup" or "Make me jollof rice using chicken and rice"
-                  </p>
-                </div>
+                {/* Simplified: removed bulky ideas/tips section for a cleaner UI */}
               </CardContent>
             </Card>
 

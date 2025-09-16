@@ -258,7 +258,7 @@ const ShoppingListAI: React.FC = () => {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="space-y-6 max-w-6xl mx-auto px-3 sm:px-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">AI Shopping List</h1>
@@ -285,7 +285,7 @@ const ShoppingListAI: React.FC = () => {
             </CardDescription>
         </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-muted rounded-lg">
               <div className="space-y-1">
                 <p className="text-sm font-medium">
                   {subscription?.plan === 'free' ? 'Free Plan' : 'Pro Plan'}
@@ -298,7 +298,7 @@ const ShoppingListAI: React.FC = () => {
                 </p>
               </div>
               {subscription?.plan === 'free' && (
-                <Badge variant={canGenerate ? "default" : "destructive"}>
+                <Badge variant={canGenerate ? "default" : "destructive"} className="self-start sm:self-auto">
                   {canGenerate ? `${usageStats.dailyLimit - usageStats.dailyUsage} remaining` : 'Limit reached'}
                 </Badge>
               )}
@@ -330,7 +330,7 @@ const ShoppingListAI: React.FC = () => {
             <CardTitle>Generate Shopping List</CardTitle>
             <CardDescription>Customize your shopping list generation parameters</CardDescription>
           </CardHeader>
-          <CardContent className="grid md:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <label className="text-sm font-medium">Meal Plan (comma-separated)</label>
               <Input 
@@ -364,15 +364,15 @@ const ShoppingListAI: React.FC = () => {
                 </SelectContent>
               </Select>
           </div>
-            <div className="md:col-span-2 flex gap-2">
+            <div className="md:col-span-2 flex flex-col sm:flex-row gap-2">
               <Button 
                 onClick={handleGenerate} 
                 disabled={loading || !canGenerate}
-                className="flex-1"
+                className="w-full sm:w-auto flex-1"
               >
                 {loading ? 'Generating...' : canGenerate ? 'Generate Shopping List' : 'Daily Limit Reached'}
               </Button>
-            <Button variant="secondary" onClick={handleSave} disabled={!content}>Save to Shopping Lists</Button>
+            <Button variant="secondary" onClick={handleSave} disabled={!content} className="w-full sm:w-auto">Save to Shopping Lists</Button>
             {loading && <LoadingSpinner />}
           </div>
           </CardContent>
@@ -436,7 +436,7 @@ const ShoppingListAI: React.FC = () => {
             {savedId && (<CardDescription>Saved as shopping list #{savedId} {verified ? '• Verified' : ''}</CardDescription>)}
           </CardHeader>
           <CardContent>
-            <div ref={previewRef} className="rounded-xl p-6 bg-gradient-to-br from-white to-emerald-50 shadow-sm">
+            <div ref={previewRef} className="rounded-xl p-6 bg-gradient-to-br from-white to-emerald-50 shadow-sm overflow-x-auto">
               <StructuredShoppingListDisplay listData={content} title="Shopping List" />
             </div>
         </CardContent>
